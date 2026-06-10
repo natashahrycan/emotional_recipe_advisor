@@ -36,14 +36,13 @@ The frontend sends the user persona and selected filter values.
 ```json
 {
   "persona": "busy-student",
-  "filters": {
-    "dish_type": "lunch-dinner",
-    "format": "food",
-    "nutrition_goal": "high-protein",
-    "cooking_time": "15-30",
-    "effort": "very-simple",
-    "ingredient_groups": ["legumes", "grains-starches"],
-    "avoid_ingredients": ["pork"]
+  "answers": {
+    "dishType": "lunch-dinner",
+    "nutritionGoal": "high-protein",
+    "time": "15-30",
+    "ingredients": ["grains-starches", "legumes-plant-protein"],
+    "avoid": ["pork"],
+    "effort": "very-simple"
   }
 }
 ```
@@ -343,42 +342,33 @@ Suggested exclusion rules:
 
 The backend should return one matched recipe, match reasons, and two story outputs.
 
-```json
 {
-  "selected_recipe": {
-    "id": "recipe-001",
-    "name": "Mediterranean Chickpea Rice Bowl",
-    "description": "A quick high-protein meal for a busy student week.",
-    "minutes": 20,
-    "ingredients": ["chickpeas", "rice", "tomatoes", "cucumber"],
-    "nutrition": {
-      "calories": 420,
-      "fat_pdv": 18,
-      "sugar_pdv": 8,
-      "sodium_pdv": 22,
-      "protein_pdv": 55,
-      "saturated_fat_pdv": 10,
-      "carbohydrates_pdv": 16
-    },
-    "tags": {
-      "dish_type": ["lunch-dinner"],
-      "format": ["food"],
-      "nutrition_goal": ["high-protein"],
-      "cooking_time": ["15-30"],
-      "effort": ["very-simple"],
-      "ingredient_groups": ["legumes", "grains-starches"],
-      "avoid_safe_for": ["pork-free"]
-    }
+  "recipe_id": 338753,
+  "name": "5 cheese grilled cheese",
+  "description": "...",
+  "tags": ["30-minutes-or-less", "lunch", "high-protein"],
+  "minutes": 20,
+  "n_steps": 6,
+  "tagline": "A 30-minute lunch/dinner meal for a busy student.",
+  "ingredients": ["sourdough bread", "butter", "parmesan cheese"],
+  "nutrition_raw": {
+    "calories": 1123.2,
+    "total_fat_pct_dv": 102,
+    "sugar_pct_dv": 6,
+    "sodium_pct_dv": 96,
+    "protein_pct_dv": 117,
+    "saturated_fat_pct_dv": 199,
+    "carbohydrates_pct_dv": 23
   },
-  "match_reasons": [
-    "Matches your high-protein goal",
-    "Fits within 15–30 minutes",
-    "Avoids pork ingredients"
+  "why_it_fits": [
+    "Ready in 20 minutes — fits your 30-minute limit",
+    "Beginner-friendly with 6 simple steps",
+    "Avoids pork, matching your preference",
+    "Higher-protein pick to support your muscle goal"
   ],
-  "human_story": "This recipe is selected because it fits the user's profile, time limit, nutrition goal, and allergy restrictions.",
-  "llm_story": "After a long day, this meal gives the user a practical and comforting way to eat well without spending too much time in the kitchen."
+  "llm_story": "Optional future field from the LLM module."
 }
-```
+
 
 ---
 
