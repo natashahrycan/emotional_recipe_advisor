@@ -14,6 +14,9 @@
   $: templateStoryText = recipe?.template_story || '';
   $: llmStoryText = recipe?.llm_story || '';
   $: storySource = recipe?.story_source || '';
+
+  $: hasTemplateStory = Boolean(templateStoryText) || timeline.length > 0;
+  $: hasFallbackSummary = selectedRecipe?.description || selectedRecipe?.tagline || matchReasons.length > 0;
 </script>
 
 {#if recipe && selectedRecipe}
@@ -41,7 +44,7 @@
 
       <div class="story-columns">
         <article class="story-card">
-          <h3>Template / Curated Story</h3>
+          <h3>Recommendation Summary</h3>
 
           {#if templateStoryText}
             <p>{templateStoryText}</p>
@@ -54,8 +57,20 @@
                 </div>
               {/each}
             </div>
+          {:else if hasFallbackSummary}
+            {#if selectedRecipe.description}
+              <p>{selectedRecipe.description}</p>
+            {/if}
+
+            {#if matchReasons.length > 0}
+              <ul>
+                {#each matchReasons as reason}
+                  <li>{reason}</li>
+                {/each}
+              </ul>
+            {/if}
           {:else}
-            <p>No template story returned yet.</p>
+            <p>No recommendation summary returned yet.</p>
           {/if}
         </article>
 
@@ -130,6 +145,11 @@
             <div>
               <span>Time</span>
               <strong>{selectedRecipe.minutes ?? '—'} min</strong>
+            </div>
+
+            <div>
+              <span>Steps</span>
+              <strong>{selectedRecipe.n_steps ?? selectedRecipe.steps?.length ?? '—'}</strong>
             </div>
 
             <div>
