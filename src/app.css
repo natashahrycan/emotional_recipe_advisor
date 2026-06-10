@@ -832,4 +832,63 @@ button {
   .result-bottom {
     grid-template-columns: 1fr;
   }
+.timeline-list {
+  display: grid;
+  gap: 10px;
+}
+
+.timeline-item {
+  padding: 10px 12px;
+  background: #fff8ea;
+  border: 2px solid rgba(80, 54, 32, 0.16);
+  border-radius: 12px;
+}
+
+.timeline-item strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--green-dark);
+}
+
+.timeline-item p {
+  margin: 0;
+}
+
+.placeholder-text {
+  color: #7a6048;
+  font-style: italic;
+}
+
+.explanation-card,
+.ingredients-card,
+.steps-card {
+  margin-top: 14px;
+}
+
+.modal-ingredient-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: system-ui, sans-serif;
+}
+
+.modal-ingredient-list span {
+  padding: 7px 10px;
+  color: #234427;
+  background: #e8f5de;
+  border: 2px solid rgba(47, 125, 70, 0.45);
+  border-radius: 999px;
+}
+
+.steps-card ol {
+  margin: 0;
+  padding-left: 22px;
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+.steps-card li {
+  margin-bottom: 6px;
+}
+
 }

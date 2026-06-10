@@ -6,11 +6,14 @@
 
   const dispatch = createEventDispatcher();
 
-  $: selectedRecipe = recipe?.selected_recipe;
+  $: selectedRecipe = recipe?.selected_recipe || null;
   $: nutrition = selectedRecipe?.nutrition || {};
   $: matchReasons = recipe?.match_reasons || [];
-  $: humanStory = recipe?.human_story || '';
-  $: llmStory = recipe?.llm_story || '';
+  $: howRecommended = recipe?.how_recommended || [];
+  $: timeline = recipe?.timeline || [];
+  $: templateStoryText = recipe?.template_story || '';
+  $: llmStoryText = recipe?.llm_story || '';
+  $: storySource = recipe?.story_source || '';
 </script>
 
 {#if recipe && selectedRecipe}
@@ -20,7 +23,7 @@
         <div>
           <p class="eyebrow">Recipe Data Storytelling</p>
           <h2>{selectedRecipe.name}</h2>
-          <p>{selectedRecipe.description}</p>
+          <p>{selectedRecipe.tagline || selectedRecipe.description}</p>
         </div>
 
         <button class="close-btn" on:click={() => dispatch('close')}>×</button>
@@ -30,23 +33,49 @@
         {#each profileTags as tag}
           <span>{tag}</span>
         {/each}
+
+        {#if storySource}
+          <span>Story source: {storySource}</span>
+        {/if}
       </div>
 
       <div class="story-columns">
         <article class="story-card">
-          <h3>Human-written Story</h3>
-          <p>{humanStory || 'No human-written story returned yet.'}</p>
+          <h3>Template / Curated Story</h3>
+
+          {#if templateStoryText}
+            <p>{templateStoryText}</p>
+          {:else if timeline.length > 0}
+            <div class="timeline-list">
+              {#each timeline as item}
+                <div class="timeline-item">
+                  <strong>{item.title}</strong>
+                  <p>{item.text}</p>
+                </div>
+              {/each}
+            </div>
+          {:else}
+            <p>No template story returned yet.</p>
+          {/if}
         </article>
 
         <article class="story-card">
           <h3>LLM-generated Story</h3>
-          <p>{llmStory || 'No LLM-generated story returned yet.'}</p>
+
+          {#if llmStoryText}
+            <p>{llmStoryText}</p>
+          {:else}
+            <p class="placeholder-text">
+              Waiting for the LLM story output. Once the LLM module is connected,
+              this section will display the generated narrative for the selected recipe.
+            </p>
+          {/if}
         </article>
       </div>
 
       <div class="result-bottom">
         <article class="why-card">
-          <h3>Why this recipe was selected</h3>
+          <h3>Why this recipe fits</h3>
 
           {#if matchReasons.length > 0}
             <ul>
@@ -102,9 +131,25 @@
               <span>Time</span>
               <strong>{selectedRecipe.minutes ?? '—'} min</strong>
             </div>
+
+            <div>
+              <span>Difficulty</span>
+              <strong>{nutrition.difficulty || '—'}</strong>
+            </div>
           </div>
         </article>
       </div>
+
+      {#if howRecommended.length > 0}
+        <article class="why-card explanation-card">
+          <h3>How this recommendation was made</h3>
+          <ul>
+            {#each howRecommended as reason}
+              <li>{reason}</li>
+            {/each}
+          </ul>
+        </article>
+      {/if}
 
       {#if selectedRecipe.ingredients?.length}
         <article class="why-card ingredients-card">
@@ -115,6 +160,18 @@
               <span>{ingredient}</span>
             {/each}
           </div>
+        </article>
+      {/if}
+
+      {#if selectedRecipe.steps?.length}
+        <article class="why-card steps-card">
+          <h3>Cooking Steps</h3>
+
+          <ol>
+            {#each selectedRecipe.steps as step}
+              <li>{step}</li>
+            {/each}
+          </ol>
         </article>
       {/if}
 

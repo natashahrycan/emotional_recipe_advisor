@@ -40,5 +40,54 @@ export async function requestRecipeRecommendation(answers) {
     throw new Error(`Recommendation request failed: ${response.status}`);
   }
 
-  return response.json();
+  const rawData = await response.json();
+  return normalizeRecommendationResponse(rawData);
+}
+
+export function normalizeRecommendationResponse(rawData) {
+  // Case 1: backend already follows the older selected_recipe contract
+  if (rawData?.selected_recipe) {
+    return {
+      selected_recipe: rawData.selected_recipe,
+      match_reasons: rawData.match_reasons || [],
+      how_recommended: rawData.how_recommended || [],
+      timeline: rawData.timeline || [],
+      template_story: rawData.template_story || rawData.human_story || '',
+      llm_story: rawData.llm_story || '',
+      story_source: rawData.story_source || 'backend'
+    };
+  }
+
+  // Case 2: current backend format from the group chat
+  const nutritionRaw = rawData?.nutrition_raw || {};
+  const nutritionSummary = rawData?.nutrition || {};
+
+  return {
+    selected_recipe: {
+      id: rawData.recipe_id,
+      name: rawData.name,
+      description: rawData.description,
+      tagline: rawData.tagline,
+      minutes: nutritionSummary.time_min,
+      ingredients: rawData.ingredients || [],
+      steps: rawData.steps || [],
+      tags: rawData.tags || [],
+      nutrition: {
+        calories: nutritionRaw.calories ?? nutritionSummary.calories,
+        fat_pdv: nutritionRaw.total_fat_pct_dv,
+        sugar_pdv: nutritionRaw.sugar_pct_dv,
+        sodium_pdv: nutritionRaw.sodium_pct_dv,
+        protein_pdv: nutritionRaw.protein_pct_dv ?? nutritionSummary.protein_pct_dv,
+        saturated_fat_pdv: nutritionRaw.saturated_fat_pct_dv,
+        carbohydrates_pdv: nutritionRaw.carbohydrates_pct_dv,
+        difficulty: nutritionSummary.difficulty
+      }
+    },
+    match_reasons: rawData.why_it_fits || [],
+    how_recommended: rawData.how_recommended || [],
+    timeline: rawData.timeline || [],
+    template_story: rawData.template_story || rawData.human_story || '',
+    llm_story: rawData.llm_story || '',
+    story_source: rawData.story_source || 'template'
+  };
 }
