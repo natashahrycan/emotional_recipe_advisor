@@ -1,0 +1,89 @@
+[
+  {
+    "id": "chickpea-rice-bowl",
+    "title": "Mediterranean Chickpea Rice Bowl",
+    "subtitle": "A quick high-protein meal for a busy student week.",
+    "tags": {
+      "userTypes": ["busy-student", "fitness-focused"],
+      "dishTypes": ["lunch-dinner"],
+      "format": ["food", "no-preference"],
+      "nutritionGoals": ["high-protein", "more-fiber", "balanced-meal"],
+      "time": ["15-30", "30-45", "no-limit"],
+      "ingredients": ["rice-pasta", "vegetables", "beans-lentils"],
+      "avoid": ["pork-free"]
+    },
+    "metrics": {
+      "protein": "28g",
+      "time": "20 min",
+      "cost": "Low",
+      "difficulty": "Easy"
+    },
+    "humanStory": "This recipe is selected for a busy student who needs a filling meal without spending too much time in the kitchen. Chickpeas, rice, and vegetables make the dish affordable, simple, and easy to repeat during the week. It also avoids pork and keeps the cooking process beginner-friendly.",
+    "llmStory": "After a long day of classes, this chickpea rice bowl gives you a warm and practical meal that still feels complete. The rice brings steady energy, the chickpeas add protein and fiber, and the vegetables make the bowl feel fresh without adding complicated steps. It is the kind of recipe you can cook once, pack again, and still feel like you made a real meal for yourself.",
+    "whySelected": [
+      "Matches your high-protein goal",
+      "Fits within 15–30 minutes",
+      "Avoids pork ingredients",
+      "Works well with simple pantry ingredients",
+      "Suitable for a beginner-friendly cooking flow"
+    ]
+  },
+  {
+    "id": "egg-veggie-breakfast",
+    "title": "Egg & Vegetable Breakfast Plate",
+    "subtitle": "A simple balanced breakfast for a quick morning.",
+    "tags": {
+      "userTypes": ["busy-student", "comfort-food"],
+      "dishTypes": ["breakfast"],
+      "format": ["food", "no-preference"],
+      "nutritionGoals": ["balanced-meal", "high-protein"],
+      "time": ["0-15", "15-30", "no-limit"],
+      "ingredients": ["eggs", "vegetables"],
+      "avoid": ["pork-free", "nut-free", "seafood-free"]
+    },
+    "metrics": {
+      "protein": "18g",
+      "time": "12 min",
+      "cost": "Low",
+      "difficulty": "Easy"
+    },
+    "humanStory": "This breakfast plate is designed for a quick morning. It uses eggs and vegetables to create a simple, warm, and balanced meal that can be prepared with little effort.",
+    "llmStory": "This meal works like a small reset before the day starts. The eggs give structure and protein, while the vegetables add color and freshness. It is quick enough for a rushed morning but still feels more intentional than skipping breakfast.",
+    "whySelected": [
+      "Fits a short cooking time",
+      "Uses common ingredients",
+      "Supports a balanced meal goal",
+      "Requires little cleanup"
+    ]
+  },
+  {
+    "id": "lentil-comfort-stew",
+    "title": "Warm Lentil Comfort Stew",
+    "subtitle": "A cozy high-fiber meal for a slower cooking moment.",
+    "tags": {
+      "userTypes": ["comfort-food", "family"],
+      "dishTypes": ["lunch-dinner"],
+      "format": ["food", "no-preference"],
+      "nutritionGoals": ["more-fiber", "balanced-meal"],
+      "time": ["30-45", "no-limit"],
+      "cookingStyles": ["soup-stew", "one-pan"],
+      "ingredients": ["vegetables", "beans-lentils", "rice-pasta"],
+      "effort": ["some-prep", "full-cooking"],
+      "avoid": ["pork-free", "nut-free"]
+    },
+    "metrics": {
+      "protein": "22g",
+      "time": "40 min",
+      "cost": "Low",
+      "difficulty": "Medium"
+    },
+    "humanStory": "This lentil stew is selected when the user has more time and wants something warm, filling, and fiber-rich. It is suitable for comfort-oriented cooking or sharing with others.",
+    "llmStory": "The stew turns a slower cooking moment into something comforting. Lentils bring protein and fiber, vegetables create depth, and the longer simmer makes the meal feel calm and grounding. It is especially useful when the goal is not only to eat, but to feel taken care of.",
+    "whySelected": [
+      "Matches a fiber-focused or balanced goal",
+      "Works for soup or stew preference",
+      "Good for a warmer comfort-food story",
+      "Can be cooked in a larger portion"
+    ]
+  }
+]
