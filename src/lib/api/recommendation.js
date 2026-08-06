@@ -3,19 +3,32 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 export function buildRecommendationPayload(answers) {
   return {
     persona: answers.userType,
+
     answers: {
       dishType: answers.dishType,
       nutritionGoal: answers.nutritionGoal,
       time: answers.cookingTime,
-      ingredients: normalizeIngredientGroupsForBackend(answers.ingredients),
-      avoid: normalizeArrayFilter(answers.allergies, 'no-allergy'),
+
+      ingredients: normalizeIngredientGroupsForBackend(
+        answers.ingredients
+      ),
+
+      avoid: normalizeArrayFilter(
+        answers.allergies,
+        'no-allergy'
+      ),
+
       effort: answers.effort
     }
   };
 }
 
+
 function normalizeArrayFilter(value, emptyValue) {
-  if (!Array.isArray(value)) return [];
+
+  if (!Array.isArray(value)) {
+    return [];
+  }
 
   if (value.includes(emptyValue)) {
     return [];
@@ -24,163 +37,354 @@ function normalizeArrayFilter(value, emptyValue) {
   return value;
 }
 
+
+
 function normalizeIngredientGroupsForBackend(value) {
-  if (!Array.isArray(value)) return [];
+
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
 
   if (value.includes('not-sure')) {
     return [];
   }
 
-  // Frontend value -> backend value mapping
-  // Backend confirmed example uses "legumes-plant-protein"
+
   const map = {
-    legumes: 'legumes-plant-protein'
+    legumes:
+      'legumes-plant-protein'
   };
 
-  return value.map((item) => map[item] || item);
+
+  return value.map(
+    item => map[item] || item
+  );
 }
+
+
 
 export async function requestRecipeRecommendation(answers) {
-  const payload = buildRecommendationPayload(answers);
 
-  const response = await fetch(`${API_BASE_URL}/api/recommend-recipe`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-  });
+  const payload =
+    buildRecommendationPayload(answers);
+
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/recommend-recipe`,
+    {
+      method: 'POST',
+
+      headers: {
+        'Content-Type':
+          'application/json'
+      },
+
+      body:
+        JSON.stringify(payload)
+    }
+  );
+
 
   if (!response.ok) {
-    throw new Error(`Recommendation request failed: ${response.status}`);
+
+    throw new Error(
+      `Recommendation request failed: ${response.status}`
+    );
+
   }
 
-  const rawData = await response.json();
-  return normalizeRecommendationResponse(rawData);
+
+  const rawData =
+    await response.json();
+
+
+  return normalizeRecommendationResponse(
+    rawData
+  );
+
 }
+
+
+
 
 export function normalizeRecommendationResponse(rawData) {
+
+
   /*
-    Supported backend response shapes:
+    Supported:
 
-    1. Current backend flat recipe object:
-       {
-         recipe_id,
-         name,
-         description,
-         tags,
-         minutes,
-         n_steps,
-         tagline,
-         ingredients,
-         nutrition_raw,
-         why_it_fits,
-         llm_story?
-       }
+    1.
+    Backend recipe object:
 
-    2. Future possible object with llm_output:
-       {
-         ...recipeData,
-         llm_output: [
-           { recipe_id, llm_story }
-         ]
-       }
+    {
+      recipe_id,
+      name,
+      nutrition_raw,
+      why_it_fits
+    }
 
-    3. Older selected_recipe contract:
-       {
-         selected_recipe,
-         match_reasons,
-         llm_story
-       }
+
+    2.
+    Backend merged with LLM:
+
+    {
+      ...recipe,
+      llm_story
+    }
+
+
+    3.
+    Backend wrapper:
+
+    {
+      recipe,
+      llm_output:[]
+    }
+
   */
 
-  if (rawData?.selected_recipe) {
-    const selectedRecipe = rawData.selected_recipe;
-    const stepCount = selectedRecipe.n_steps ?? selectedRecipe.steps?.length;
 
-    return {
-      selected_recipe: {
-        ...selectedRecipe,
-        nutrition: {
-          ...(selectedRecipe.nutrition || {}),
-          difficulty:
-            selectedRecipe.nutrition?.difficulty ||
-            selectedRecipe.difficulty ||
-            getDifficultyFromStepCount(stepCount)
-        }
-      },
-      match_reasons: rawData.match_reasons || [],
-      how_recommended: rawData.how_recommended || [],
-      timeline: rawData.timeline || [],
-      template_story: rawData.template_story || '',
-      llm_story: getLlmStory(rawData, selectedRecipe.id),
-      story_source: rawData.story_source || 'backend'
-    };
-  }
 
-  const nutritionRaw = rawData?.nutrition_raw || {};
-  const recipeId = rawData?.recipe_id;
+  const recipeData =
+    rawData?.recipe || rawData;
+
+
+
+  const recipeId =
+    recipeData?.recipe_id;
+
+
+
+  const nutritionRaw =
+    recipeData?.nutrition_raw || {};
+
+
 
   return {
+
     selected_recipe: {
-      id: recipeId,
-      recipe_id: recipeId,
-      name: rawData?.name,
-      description: rawData?.description,
-      tagline: rawData?.tagline,
-      minutes: rawData?.minutes,
-      n_steps: rawData?.n_steps,
-      ingredients: rawData?.ingredients || [],
-      steps: rawData?.steps || [],
-      tags: rawData?.tags || [],
+
+      id:
+        recipeId,
+
+      recipe_id:
+        recipeId,
+
+
+      name:
+        recipeData?.name,
+
+
+      description:
+        recipeData?.description,
+
+
+      tagline:
+        recipeData?.tagline,
+
+
+      minutes:
+        recipeData?.minutes,
+
+
+      n_steps:
+        recipeData?.n_steps,
+
+
+      ingredients:
+        recipeData?.ingredients || [],
+
+
+      steps:
+        recipeData?.steps || [],
+
+
+      tags:
+        recipeData?.tags || [],
+
+
       nutrition: {
-        calories: nutritionRaw.calories,
-        fat_pdv: nutritionRaw.total_fat_pct_dv,
-        sugar_pdv: nutritionRaw.sugar_pct_dv,
-        sodium_pdv: nutritionRaw.sodium_pct_dv,
-        protein_pdv: nutritionRaw.protein_pct_dv,
-        saturated_fat_pdv: nutritionRaw.saturated_fat_pct_dv,
-        carbohydrates_pdv: nutritionRaw.carbohydrates_pct_dv,
-        difficulty: getDifficultyFromStepCount(rawData?.n_steps)
+
+        calories:
+          nutritionRaw.calories,
+
+
+        fat_pdv:
+          nutritionRaw.total_fat_pct_dv,
+
+
+        sugar_pdv:
+          nutritionRaw.sugar_pct_dv,
+
+
+        sodium_pdv:
+          nutritionRaw.sodium_pct_dv,
+
+
+        protein_pdv:
+          nutritionRaw.protein_pct_dv,
+
+
+        saturated_fat_pdv:
+          nutritionRaw.saturated_fat_pct_dv,
+
+
+        carbohydrates_pdv:
+          nutritionRaw.carbohydrates_pct_dv,
+
+
+        difficulty:
+          getDifficultyFromStepCount(
+            recipeData?.n_steps
+          )
+
       }
+
     },
-    match_reasons: rawData?.why_it_fits || [],
-    how_recommended: rawData?.how_recommended || [],
-    timeline: rawData?.timeline || [],
-    template_story: rawData?.template_story || '',
-    llm_story: getLlmStory(rawData, recipeId),
-    story_source: rawData?.story_source || (rawData?.llm_story ? 'llm' : 'backend')
+
+
+    match_reasons:
+      recipeData?.why_it_fits || [],
+
+
+    how_recommended:
+      recipeData?.how_recommended || [],
+
+
+    llm_story:
+      getLlmStory(
+        rawData,
+        recipeId
+      ),
+
+
+    story_source:
+      getLlmStory(
+        rawData,
+        recipeId
+      )
+      ? 'llm'
+      : 'backend'
+
   };
+
 }
+
+
+
 
 function getDifficultyFromStepCount(stepCount) {
-  if (typeof stepCount !== 'number') return '—';
 
-  if (stepCount < 8) return 'Easy';
-  if (stepCount <= 15) return 'Medium';
+
+  if (
+    typeof stepCount !== 'number'
+  ) {
+
+    return '—';
+
+  }
+
+
+  if (stepCount < 8) {
+
+    return 'Easy';
+
+  }
+
+
+  if (stepCount <= 15) {
+
+    return 'Medium';
+
+  }
+
+
   return 'Difficult';
+
 }
 
-function getLlmStory(rawData, recipeId) {
-  if (rawData?.llm_story) {
+
+
+
+function getLlmStory(
+  rawData,
+  recipeId
+) {
+
+
+  // Case 1:
+  // backend already merges story
+
+  if (
+    rawData?.llm_story
+  ) {
+
     return rawData.llm_story;
+
   }
 
-  if (Array.isArray(rawData?.llm_output)) {
-    const matchedStory = rawData.llm_output.find((item) => {
-      return String(item.recipe_id) === String(recipeId);
-    });
 
-    return matchedStory?.llm_story || '';
+
+  // Case 2:
+  // LLM returns directly:
+
+  /*
+  [
+    {
+      recipe_id:338753,
+      llm_story:"..."
+    }
+  ]
+  */
+
+
+  if (
+    Array.isArray(rawData)
+  ) {
+
+
+    const item =
+      rawData.find(
+        x =>
+          String(x.recipe_id)
+          ===
+          String(recipeId)
+      );
+
+
+    return item?.llm_story || '';
+
   }
 
-  if (Array.isArray(rawData?.llm_stories)) {
-    const matchedStory = rawData.llm_stories.find((item) => {
-      return String(item.recipe_id) === String(recipeId);
-    });
 
-    return matchedStory?.llm_story || '';
+
+  // Case 3:
+  // backend wrapper
+
+
+  if (
+    Array.isArray(
+      rawData?.llm_output
+    )
+  ) {
+
+
+    const item =
+      rawData.llm_output.find(
+        x =>
+          String(x.recipe_id)
+          ===
+          String(recipeId)
+      );
+
+
+    return item?.llm_story || '';
+
   }
+
+
 
   return '';
+
 }
