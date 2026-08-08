@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+pandas>=2.0
+# optional — only needed if you set HF_TOKEN to use a real LLM:
+huggingface_hub>=0.25
+# optional — only needed for POST /evaluate/bleu:
+sacrebleu>=2.4
