@@ -9,9 +9,7 @@ export function buildRecommendationPayload(answers) {
       nutritionGoal: answers.nutritionGoal,
       time: answers.cookingTime,
 
-      ingredients: normalizeIngredientGroupsForBackend(
-        answers.ingredients
-      ),
+      ingredients: normalizeIngredientGroupsForBackend(answers.ingredients),
 
       avoid: normalizeArrayFilter(
         answers.allergies,
@@ -23,9 +21,7 @@ export function buildRecommendationPayload(answers) {
   };
 }
 
-
 function normalizeArrayFilter(value, emptyValue) {
-
   if (!Array.isArray(value)) {
     return [];
   }
@@ -37,354 +33,316 @@ function normalizeArrayFilter(value, emptyValue) {
   return value;
 }
 
-
-
 function normalizeIngredientGroupsForBackend(value) {
-
   if (!Array.isArray(value)) {
     return [];
   }
-
 
   if (value.includes('not-sure')) {
     return [];
   }
 
-
   const map = {
-    legumes:
-      'legumes-plant-protein'
+    legumes: 'legumes-plant-protein'
   };
 
-
-  return value.map(
-    item => map[item] || item
-  );
+  return value.map((item) => map[item] || item);
 }
 
-
-
 export async function requestRecipeRecommendation(answers) {
+  const payload = buildRecommendationPayload(answers);
 
-  const payload =
-    buildRecommendationPayload(answers);
+  const response = await fetch(`${API_BASE_URL}/api/recommend-recipe`, {
+    method: 'POST',
 
+    headers: {
+      'Content-Type': 'application/json'
+    },
 
-  const response = await fetch(
-    `${API_BASE_URL}/api/recommend-recipe`,
-    {
-      method: 'POST',
-
-      headers: {
-        'Content-Type':
-          'application/json'
-      },
-
-      body:
-        JSON.stringify(payload)
-    }
-  );
-
+    body: JSON.stringify(payload)
+  });
 
   if (!response.ok) {
-
     throw new Error(
       `Recommendation request failed: ${response.status}`
     );
-
   }
 
+  const rawData = await response.json();
 
-  const rawData =
-    await response.json();
-
-
-  return normalizeRecommendationResponse(
-    rawData
-  );
-
+  return normalizeRecommendationResponse(rawData);
 }
-
-
-
 
 export function normalizeRecommendationResponse(rawData) {
-
-
   /*
-    Supported:
+    Supported backend response shapes:
 
-    1.
-    Backend recipe object:
+    1. Current backend recipe object:
+       {
+         recipe_id,
+         name,
+         description,
+         tags,
+         minutes,
+         n_steps,
+         tagline,
+         ingredients,
+         nutrition_raw,
+         why_it_fits,
+         human_story,
+         llm_story
+       }
 
-    {
-      recipe_id,
-      name,
-      nutrition_raw,
-      why_it_fits
-    }
+    2. Backend wrapper:
+       {
+         recipe: {
+           ...
+         },
+         human_story,
+         llm_story
+       }
 
+    3. Backend selected_recipe wrapper:
+       {
+         selected_recipe: {
+           ...
+         },
+         human_story,
+         llm_story
+       }
 
-    2.
-    Backend merged with LLM:
-
-    {
-      ...recipe,
-      llm_story
-    }
-
-
-    3.
-    Backend wrapper:
-
-    {
-      recipe,
-      llm_output:[]
-    }
-
+    4. Story array support:
+       human_output / human_stories / llm_output / llm_stories
   */
-
-
 
   const recipeData =
-    rawData?.recipe || rawData;
-
-
+    rawData?.recipe ||
+    rawData?.selected_recipe ||
+    rawData;
 
   const recipeId =
-    recipeData?.recipe_id;
-
-
+    recipeData?.recipe_id ||
+    recipeData?.id;
 
   const nutritionRaw =
-    recipeData?.nutrition_raw || {};
+    recipeData?.nutrition_raw ||
+    rawData?.nutrition_raw ||
+    {};
 
+  const nutrition =
+    recipeData?.nutrition ||
+    rawData?.nutrition ||
+    {};
 
+  const humanStory =
+    getHumanStory(rawData, recipeData, recipeId);
+
+  const llmStory =
+    getLlmStory(rawData, recipeId);
 
   return {
-
     selected_recipe: {
+      id: recipeId,
+      recipe_id: recipeId,
 
-      id:
-        recipeId,
+      name: recipeData?.name,
 
-      recipe_id:
-        recipeId,
+      description: recipeData?.description,
 
+      tagline: recipeData?.tagline,
 
-      name:
-        recipeData?.name,
+      minutes: recipeData?.minutes,
 
+      n_steps: recipeData?.n_steps,
 
-      description:
-        recipeData?.description,
+      ingredients: recipeData?.ingredients || [],
 
+      steps: recipeData?.steps || [],
 
-      tagline:
-        recipeData?.tagline,
-
-
-      minutes:
-        recipeData?.minutes,
-
-
-      n_steps:
-        recipeData?.n_steps,
-
-
-      ingredients:
-        recipeData?.ingredients || [],
-
-
-      steps:
-        recipeData?.steps || [],
-
-
-      tags:
-        recipeData?.tags || [],
-
+      tags: recipeData?.tags || [],
 
       nutrition: {
+        calories: toNumber(
+          nutritionRaw.calories ??
+          nutrition.calories
+        ),
 
-        calories:
-          nutritionRaw.calories,
+        fat_pdv: toNumber(
+          nutritionRaw.total_fat_pct_dv ??
+          nutrition.total_fat_pct_dv ??
+          nutrition.fat_pdv
+        ),
 
+        sugar_pdv: toNumber(
+          nutritionRaw.sugar_pct_dv ??
+          nutrition.sugar_pct_dv ??
+          nutrition.sugar_pdv
+        ),
 
-        fat_pdv:
-          nutritionRaw.total_fat_pct_dv,
+        sodium_pdv: toNumber(
+          nutritionRaw.sodium_pct_dv ??
+          nutrition.sodium_pct_dv ??
+          nutrition.sodium_pdv
+        ),
 
+        protein_pdv: toNumber(
+          nutritionRaw.protein_pct_dv ??
+          nutrition.protein_pct_dv ??
+          nutrition.protein_pdv
+        ),
 
-        sugar_pdv:
-          nutritionRaw.sugar_pct_dv,
+        saturated_fat_pdv: toNumber(
+          nutritionRaw.saturated_fat_pct_dv ??
+          nutrition.saturated_fat_pct_dv ??
+          nutrition.saturated_fat_pdv
+        ),
 
-
-        sodium_pdv:
-          nutritionRaw.sodium_pct_dv,
-
-
-        protein_pdv:
-          nutritionRaw.protein_pct_dv,
-
-
-        saturated_fat_pdv:
-          nutritionRaw.saturated_fat_pct_dv,
-
-
-        carbohydrates_pdv:
-          nutritionRaw.carbohydrates_pct_dv,
-
+        carbohydrates_pdv: toNumber(
+          nutritionRaw.carbohydrates_pct_dv ??
+          nutrition.carbohydrates_pct_dv ??
+          nutrition.carbohydrates_pdv
+        ),
 
         difficulty:
+          recipeData?.difficulty ||
+          nutrition.difficulty ||
           getDifficultyFromStepCount(
-            recipeData?.n_steps
+            recipeData?.n_steps ??
+            recipeData?.steps?.length
           )
-
       }
-
     },
 
-
     match_reasons:
-      recipeData?.why_it_fits || [],
-
+      recipeData?.why_it_fits ||
+      rawData?.why_it_fits ||
+      rawData?.match_reasons ||
+      [],
 
     how_recommended:
-      recipeData?.how_recommended || [],
+      recipeData?.how_recommended ||
+      rawData?.how_recommended ||
+      [],
 
+    human_story: humanStory,
 
-    llm_story:
-      getLlmStory(
-        rawData,
-        recipeId
-      ),
-
+    llm_story: llmStory,
 
     story_source:
-      getLlmStory(
-        rawData,
-        recipeId
-      )
-      ? 'llm'
-      : 'backend'
-
+      humanStory && llmStory
+        ? 'human + llm'
+        : llmStory
+          ? 'llm'
+          : humanStory
+            ? 'human'
+            : 'backend'
   };
-
 }
 
+function toNumber(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ''
+  ) {
+    return undefined;
+  }
 
+  const number = Number(value);
 
+  return Number.isFinite(number)
+    ? number
+    : undefined;
+}
 
 function getDifficultyFromStepCount(stepCount) {
-
-
-  if (
-    typeof stepCount !== 'number'
-  ) {
-
+  if (typeof stepCount !== 'number') {
     return '—';
-
   }
-
 
   if (stepCount < 8) {
-
     return 'Easy';
-
   }
-
 
   if (stepCount <= 15) {
-
     return 'Medium';
-
   }
-
 
   return 'Difficult';
-
 }
 
-
-
-
-function getLlmStory(
-  rawData,
-  recipeId
-) {
-
-
-  // Case 1:
-  // backend already merges story
-
-  if (
-    rawData?.llm_story
-  ) {
-
-    return rawData.llm_story;
-
+function getHumanStory(rawData, recipeData, recipeId) {
+  if (recipeData?.human_story) {
+    return recipeData.human_story;
   }
 
-
-
-  // Case 2:
-  // LLM returns directly:
-
-  /*
-  [
-    {
-      recipe_id:338753,
-      llm_story:"..."
-    }
-  ]
-  */
-
-
-  if (
-    Array.isArray(rawData)
-  ) {
-
-
-    const item =
-      rawData.find(
-        x =>
-          String(x.recipe_id)
-          ===
-          String(recipeId)
-      );
-
-
-    return item?.llm_story || '';
-
+  if (rawData?.human_story) {
+    return rawData.human_story;
   }
 
-
-
-  // Case 3:
-  // backend wrapper
-
-
-  if (
-    Array.isArray(
-      rawData?.llm_output
-    )
-  ) {
-
-
-    const item =
-      rawData.llm_output.find(
-        x =>
-          String(x.recipe_id)
-          ===
-          String(recipeId)
-      );
-
-
-    return item?.llm_story || '';
-
+  if (rawData?.recipe?.human_story) {
+    return rawData.recipe.human_story;
   }
 
+  if (rawData?.selected_recipe?.human_story) {
+    return rawData.selected_recipe.human_story;
+  }
 
+  if (Array.isArray(rawData?.human_output)) {
+    const item = rawData.human_output.find((story) => {
+      return String(story.recipe_id) === String(recipeId);
+    });
+
+    return item?.human_story || '';
+  }
+
+  if (Array.isArray(rawData?.human_stories)) {
+    const item = rawData.human_stories.find((story) => {
+      return String(story.recipe_id) === String(recipeId);
+    });
+
+    return item?.human_story || '';
+  }
 
   return '';
+}
 
+function getLlmStory(rawData, recipeId) {
+  if (rawData?.llm_story) {
+    return rawData.llm_story;
+  }
+
+  if (rawData?.recipe?.llm_story) {
+    return rawData.recipe.llm_story;
+  }
+
+  if (rawData?.selected_recipe?.llm_story) {
+    return rawData.selected_recipe.llm_story;
+  }
+
+  if (Array.isArray(rawData)) {
+    const item = rawData.find((story) => {
+      return String(story.recipe_id) === String(recipeId);
+    });
+
+    return item?.llm_story || '';
+  }
+
+  if (Array.isArray(rawData?.llm_output)) {
+    const item = rawData.llm_output.find((story) => {
+      return String(story.recipe_id) === String(recipeId);
+    });
+
+    return item?.llm_story || '';
+  }
+
+  if (Array.isArray(rawData?.llm_stories)) {
+    const item = rawData.llm_stories.find((story) => {
+      return String(story.recipe_id) === String(recipeId);
+    });
+
+    return item?.llm_story || '';
+  }
+
+  return '';
 }
