@@ -74,16 +74,3 @@ Development Notes:
 The backend is intentionally one file (app.py) to keep things easy to read.
 
 The recipe dataset is loaded once at startup for performance.
-
-Story generation is abstracted so you can swap in any LLM.
-
-The API contract is documented in API_CONTRACT.md.
-
-Project Structure:
-teamproject/
-│
-├── app.py                # FastAPI backend
-├── requirements.txt      # Python dependencies
-├── API_CONTRACT.md       # Frontend-backend contract
-├── data/                 # Recipe dataset (CSV)
-└── README.md             # This file
