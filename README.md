@@ -70,27 +70,3 @@ If a recipe ID isn’t found, the backend falls back to:
 "No human-written story available yet."
 
 
-Development Notes:
-The backend is intentionally one file (app.py) to keep things easy to read.
-
-The recipe dataset is loaded once at startup for performance.
-
-Story generation is abstracted so you can swap in any LLM.
-
-The API contract is documented in API_CONTRACT.md.
-
-Project Structure:
-teamproject/
-
---- app.py                # FastAPI backend
-├── requirements.txt      # Python dependencies
-├── API_CONTRACT.md       # Frontend-backend contract
-├── data/                 # Recipe dataset (CSV)
-└── README.md             # This file
-
-cd ~/Downloads/teamproject
-source venv/bin/activate
-uvicorn app:app --reload --port 8000
-
-cd ~/Downloads/frontend
-npm run dev
