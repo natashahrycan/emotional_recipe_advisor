@@ -81,9 +81,16 @@ The API contract is documented in API_CONTRACT.md.
 
 Project Structure:
 teamproject/
-│
-├── app.py                # FastAPI backend
+
+--- app.py                # FastAPI backend
 ├── requirements.txt      # Python dependencies
 ├── API_CONTRACT.md       # Frontend-backend contract
 ├── data/                 # Recipe dataset (CSV)
 └── README.md             # This file
+
+cd ~/Downloads/teamproject
+source venv/bin/activate
+uvicorn app:app --reload --port 8000
+
+cd ~/Downloads/frontend
+npm run dev
